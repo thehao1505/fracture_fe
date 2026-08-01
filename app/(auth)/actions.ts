@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { login, register } from "@/lib/api/auth";
+import { login, loginWithGoogle, register } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import type { FormState } from "@/lib/form-state";
 import { clearSessionToken, setSessionToken } from "@/lib/session";
@@ -83,6 +83,31 @@ export async function registerAction(
   }
 
   redirect("/dashboard");
+}
+
+/**
+ * Google Sign-In guideline §4 — invoked directly from the Google button's
+ * credential callback, not a <form>. All distinct 401 causes collapse to one
+ * generic message on purpose (guideline §4: "do not try to distinguish them
+ * on the FE").
+ */
+export async function loginWithGoogleAction(
+  idToken: string,
+  next?: string,
+): Promise<{ error?: string } | undefined> {
+  if (!idToken) return { error: "Google sign-in failed. Please try again." };
+
+  try {
+    const res = await loginWithGoogle({ id_token: idToken });
+    await setSessionToken(res.access_token);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { error: "Google sign-in failed. Please try again." };
+    }
+    throw err;
+  }
+
+  redirect(safeNextPath(next ?? null));
 }
 
 export async function logoutAction(): Promise<void> {

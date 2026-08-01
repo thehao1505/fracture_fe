@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { registerAction } from "@/app/(auth)/actions";
 import { INITIAL_FORM_STATE } from "@/lib/form-state";
 import { Alert, Button, Field, Input } from "@/components/ui";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
 
 export function RegisterForm() {
   const [state, formAction, pending] = useActionState(
@@ -47,6 +48,12 @@ export function RegisterForm() {
       <Button type="submit" disabled={pending}>
         {pending ? "Creating account…" : "Create account"}
       </Button>
+      <div className="flex items-center gap-3 text-xs text-zinc-400 dark:text-zinc-500">
+        <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        or
+        <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+      </div>
+      <GoogleLoginButton />
       <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
         Already have an account?{" "}
         <Link

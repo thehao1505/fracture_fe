@@ -142,6 +142,11 @@ export interface LoginRequest {
   password: string;
 }
 
+/** §4 (Google guideline) POST /auth/google. */
+export interface GoogleLoginRequest {
+  id_token: string;
+}
+
 export interface CreateUserRequest {
   email: string;
   name: string;
