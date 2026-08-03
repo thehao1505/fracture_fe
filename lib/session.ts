@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
  * on 401 we clear the cookie and send the user back to /login (§6, §8.7).
  */
 
-export const TOKEN_COOKIE = "fracture_token";
+export const TOKEN_COOKIE = "at";
 
 const TOKEN_MAX_AGE_SECONDS = 24 * 60 * 60; // JWT_EXPIRY default "24h" (§2)
 

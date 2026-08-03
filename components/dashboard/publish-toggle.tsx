@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Globe, Loader2 } from "lucide-react";
 import { togglePublishAction } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui";
 
@@ -21,6 +22,11 @@ export function PublishToggle({ isPublished }: { isPublished: boolean }) {
           })
         }
       >
+        {pending ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        ) : (
+          <Globe className="h-4 w-4" aria-hidden />
+        )}
         {pending ? "Saving…" : isPublished ? "Unpublish" : "Publish"}
       </Button>
     </div>

@@ -1,6 +1,19 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  EyeOff,
+  Loader2,
+  MousePointerClick,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import {
   addBlockAction,
   deleteBlockAction,
@@ -10,7 +23,7 @@ import {
 } from "@/app/dashboard/actions";
 import type { Block, BlockType, LinkContent, SocialsContent, HeaderContent } from "@/lib/api/types";
 import { INITIAL_FORM_STATE } from "@/lib/form-state";
-import { Alert, Button, Card, EmptyState, Select } from "@/components/ui";
+import { Alert, Badge, Button, Card, EmptyState, Select } from "@/components/ui";
 import { BlockContentFields } from "./block-content-fields";
 
 const MAX_BLOCKS = 100; // §7.5
@@ -63,23 +76,25 @@ export function BlocksManager({ blocks }: { blocks: Block[] }) {
         </EmptyState>
       ) : (
         <ul className="flex flex-col gap-3">
-          {blocks.map((block, index) => (
-            <BlockRow
-              key={block.id}
-              block={block}
-              pending={pending}
-              onMoveUp={index > 0 ? () => move(index, -1) : undefined}
-              onMoveDown={
-                index < blocks.length - 1 ? () => move(index, 1) : undefined
-              }
-              onToggle={() => run(() => toggleBlockVisibilityAction(block.id))}
-              onDelete={() => {
-                if (window.confirm("Delete this block? This cannot be undone.")) {
-                  run(() => deleteBlockAction(block.id));
+          <AnimatePresence initial={false} mode="popLayout">
+            {blocks.map((block, index) => (
+              <BlockRow
+                key={block.id}
+                block={block}
+                pending={pending}
+                onMoveUp={index > 0 ? () => move(index, -1) : undefined}
+                onMoveDown={
+                  index < blocks.length - 1 ? () => move(index, 1) : undefined
                 }
-              }}
-            />
-          ))}
+                onToggle={() => run(() => toggleBlockVisibilityAction(block.id))}
+                onDelete={() => {
+                  if (window.confirm("Delete this block? This cannot be undone.")) {
+                    run(() => deleteBlockAction(block.id));
+                  }
+                }}
+              />
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 
@@ -106,20 +121,26 @@ function BlockRow({
   const [editing, setEditing] = useState(false);
 
   return (
-    <li className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.2 }}
+      className="rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/50"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-              {TYPE_LABELS[block.type]}
-            </span>
+            <Badge tone="brand">{TYPE_LABELS[block.type]}</Badge>
             {!block.is_active && (
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+              <Badge tone="warning" icon={EyeOff}>
                 Hidden
-              </span>
+              </Badge>
             )}
             {block.type === "link" && (
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+              <span className="flex items-center gap-1 text-xs text-zinc-400 dark:text-zinc-500">
+                <MousePointerClick className="h-3 w-3" aria-hidden />
                 {block.click_count} click{block.click_count === 1 ? "" : "s"}
               </span>
             )}
@@ -130,36 +151,54 @@ function BlockRow({
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <IconButton label="Move up" onClick={onMoveUp} disabled={pending || !onMoveUp}>
-            ↑
+            <ArrowUp className="h-4 w-4" aria-hidden />
           </IconButton>
           <IconButton
             label="Move down"
             onClick={onMoveDown}
             disabled={pending || !onMoveDown}
           >
-            ↓
+            <ArrowDown className="h-4 w-4" aria-hidden />
           </IconButton>
           <IconButton
             label={block.is_active ? "Hide block" : "Show block"}
             onClick={onToggle}
             disabled={pending}
           >
-            {block.is_active ? "Hide" : "Show"}
+            {block.is_active ? (
+              <Eye className="h-4 w-4" aria-hidden />
+            ) : (
+              <EyeOff className="h-4 w-4" aria-hidden />
+            )}
           </IconButton>
-          <IconButton label="Edit block" onClick={() => setEditing((v) => !v)}>
-            {editing ? "Close" : "Edit"}
+          <IconButton label={editing ? "Close editor" : "Edit block"} onClick={() => setEditing((v) => !v)}>
+            {editing ? (
+              <X className="h-4 w-4" aria-hidden />
+            ) : (
+              <Pencil className="h-4 w-4" aria-hidden />
+            )}
           </IconButton>
           <IconButton label="Delete block" onClick={onDelete} disabled={pending} danger>
-            Delete
+            <Trash2 className="h-4 w-4" aria-hidden />
           </IconButton>
         </div>
       </div>
-      {editing && (
-        <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-900">
-          <EditBlockForm block={block} onSaved={() => setEditing(false)} />
-        </div>
-      )}
-    </li>
+      <AnimatePresence initial={false}>
+        {editing && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 border-t border-zinc-200/60 pt-4 dark:border-white/10">
+              <EditBlockForm block={block} onSaved={() => setEditing(false)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.li>
   );
 }
 
@@ -183,10 +222,10 @@ function IconButton({
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`rounded px-1.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`rounded-lg p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         danger
-          ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+          : "text-zinc-600 hover:bg-zinc-100/80 dark:text-zinc-300 dark:hover:bg-white/10"
       }`}
     >
       {children}
@@ -215,6 +254,7 @@ function EditBlockForm({ block, onSaved }: { block: Block; onSaved: () => void }
         content={block.content}
       />
       <Button type="submit" disabled={pending} className="self-start">
+        {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         {pending ? "Saving…" : "Save block"}
       </Button>
     </form>
@@ -255,6 +295,11 @@ function AddBlockForm({ disabled }: { disabled: boolean }) {
         {/* Remount fields when the type changes so defaults reset */}
         <BlockContentFields key={type} type={type} idPrefix="add" />
         <Button type="submit" disabled={pending} className="self-start">
+          {pending ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Plus className="h-4 w-4" aria-hidden />
+          )}
           {pending ? "Adding…" : "Add block"}
         </Button>
       </form>

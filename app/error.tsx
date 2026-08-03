@@ -1,6 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui";
+import { TriangleAlert } from "lucide-react";
+import { GradientMesh } from "@/components/gradient-mesh";
+import { Button, Card } from "@/components/ui";
 
 /**
  * Catches unexpected failures (API 500s, network errors when the Fracture API
@@ -17,18 +19,24 @@ export default function ErrorPage({
   const isApiDown = error.message.includes("could not reach the Fracture API");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-zinc-50 px-4 text-center dark:bg-black">
-      <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Something went wrong
-      </h1>
-      <p className="max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-        {isApiDown
-          ? "The Fracture API is unreachable. Make sure the backend is running, then try again."
-          : "An unexpected error occurred. Please try again."}
-      </p>
-      <Button onClick={() => unstable_retry()} className="mt-2">
-        Try again
-      </Button>
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <GradientMesh />
+      <Card>
+        <div className="flex flex-col items-center gap-3">
+          <TriangleAlert className="h-8 w-8 text-amber-500" aria-hidden />
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+            Something went wrong
+          </h1>
+          <p className="max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
+            {isApiDown
+              ? "The Fracture API is unreachable. Make sure the backend is running, then try again."
+              : "An unexpected error occurred. Please try again."}
+          </p>
+          <Button onClick={() => unstable_retry()} className="mt-2">
+            Try again
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

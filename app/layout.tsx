@@ -13,6 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Needed for og:image and canonical URLs to resolve absolutely. Set
+  // NEXT_PUBLIC_SITE_URL in every deployed environment.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
   title: "fracture — one page for all your links",
   description: "Claim a username, add your links, and share a single URL.",
 };

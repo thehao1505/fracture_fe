@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { SOCIAL_PLATFORMS, type SocialItem } from "@/lib/api/types";
 import { Button, Input, Select } from "@/components/ui";
 
@@ -53,11 +54,12 @@ export function SocialItemsEditor({ initial }: { initial: SocialItem[] }) {
             variant="danger"
             aria-label="Remove item"
             disabled={items.length <= 1}
+            className="w-10 shrink-0 px-0"
             onClick={() =>
               setItems((current) => current.filter((_, i) => i !== index))
             }
           >
-            ✕
+            <Trash2 className="h-4 w-4" aria-hidden />
           </Button>
         </div>
       ))}
@@ -69,6 +71,7 @@ export function SocialItemsEditor({ initial }: { initial: SocialItem[] }) {
           setItems((current) => [...current, { platform: "website", url: "" }])
         }
       >
+        <Plus className="h-4 w-4" aria-hidden />
         Add social link {items.length >= 20 && "(max 20)"}
       </Button>
     </div>

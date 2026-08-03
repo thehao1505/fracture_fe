@@ -4,8 +4,9 @@ import Link from "next/link";
 import { ApiError } from "@/lib/api/client";
 import { getMyProfile } from "@/lib/api/me";
 import type { Profile } from "@/lib/api/types";
+import { profileOrigin, ROOT_DOMAIN } from "@/lib/domain";
 import { requireSessionToken } from "@/lib/session";
-import { Card } from "@/components/ui";
+import { Badge, Card } from "@/components/ui";
 import { CreateProfileForm } from "@/components/dashboard/create-profile-form";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { BlocksManager } from "@/components/dashboard/blocks-manager";
@@ -53,18 +54,23 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-            My page
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+              My page
+            </h1>
+            <Badge tone={profile.is_published ? "brand" : "neutral"}>
+              {profile.is_published ? "Live" : "Draft"}
+            </Badge>
+          </div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {profile.is_published ? (
               <>
                 Live at{" "}
                 <Link
-                  href={`/${profile.username}`}
-                  className="font-medium text-zinc-900 underline dark:text-zinc-100"
+                  href={profileOrigin(profile.username)}
+                  className="font-medium text-brand-via underline underline-offset-2 dark:text-fuchsia-300"
                 >
-                  /{profile.username}
+                  {profile.username}.{ROOT_DOMAIN}
                 </Link>
               </>
             ) : (

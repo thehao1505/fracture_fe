@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { updateProfileAction } from "@/app/dashboard/actions";
 import type { BackgroundType, Profile } from "@/lib/api/types";
 import { INITIAL_FORM_STATE } from "@/lib/form-state";
@@ -77,7 +78,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <img
               src={avatarPreview}
               alt="Avatar preview"
-              className="h-10 w-10 rounded-full border border-zinc-200 object-cover dark:border-zinc-700"
+              className="h-10 w-10 rounded-full border-2 border-white object-cover shadow-sm ring-1 ring-zinc-200 dark:border-zinc-900 dark:ring-white/10"
             />
           )}
           <Input
@@ -92,7 +93,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         </div>
       </Field>
 
-      <fieldset className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+      <fieldset className="flex flex-col gap-4 rounded-xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-white/5">
         <legend className="px-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Appearance
         </legend>
@@ -171,6 +172,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </fieldset>
 
       <Button type="submit" disabled={pending}>
+        {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         {pending ? "Saving…" : "Save profile"}
       </Button>
     </form>

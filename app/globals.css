@@ -3,13 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand gradient ramp — indigo → violet → fuchsia */
+  --color-brand-from: #6366f1;
+  --color-brand-via: #8b5cf6;
+  --color-brand-to: #d946ef;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-from: var(--color-brand-from);
+  --color-brand-via: var(--color-brand-via);
+  --color-brand-to: var(--color-brand-to);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-float: float 9s ease-in-out infinite;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +31,145 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(2%, -4%) scale(1.08);
+  }
+}
+
+/* ---------- public profile (/[username]) ---------- */
+
+/*
+ * Design tokens for the public page. `.pf-theme` is the light set;
+ * `.pf-theme-dark` pins the dark set, and `.pf-theme-auto` follows the
+ * visitor when the profile's owner never chose a theme. Per-profile
+ * overrides (button colour, corner radius) are inlined on the same element
+ * and win over both, since inline styles beat class rules.
+ */
+.pf-theme {
+  --pf-text: #18181b;
+  --pf-muted: rgba(24, 24, 27, 0.62);
+  --pf-faint: rgba(24, 24, 27, 0.45);
+  --pf-surface: rgba(255, 255, 255, 0.62);
+  --pf-surface-hover: rgba(255, 255, 255, 0.88);
+  --pf-border: rgba(255, 255, 255, 0.7);
+  --pf-hairline: rgba(24, 24, 27, 0.1);
+  --pf-shadow: 0 10px 30px -18px rgba(24, 24, 27, 0.55);
+  --pf-btn-bg: #18181b;
+  --pf-btn-fg: #fafafa;
+  --pf-ring: rgba(24, 24, 27, 0.55);
+  --pf-radius: 0.9rem;
+  color-scheme: light;
+}
+
+.pf-theme-dark {
+  --pf-text: #fafafa;
+  --pf-muted: rgba(250, 250, 250, 0.64);
+  --pf-faint: rgba(250, 250, 250, 0.45);
+  --pf-surface: rgba(255, 255, 255, 0.07);
+  --pf-surface-hover: rgba(255, 255, 255, 0.14);
+  --pf-border: rgba(255, 255, 255, 0.12);
+  --pf-hairline: rgba(255, 255, 255, 0.14);
+  --pf-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
+  --pf-btn-bg: #fafafa;
+  --pf-btn-fg: #18181b;
+  --pf-ring: rgba(250, 250, 250, 0.7);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pf-theme-auto {
+    --pf-text: #fafafa;
+    --pf-muted: rgba(250, 250, 250, 0.64);
+    --pf-faint: rgba(250, 250, 250, 0.45);
+    --pf-surface: rgba(255, 255, 255, 0.07);
+    --pf-surface-hover: rgba(255, 255, 255, 0.14);
+    --pf-border: rgba(255, 255, 255, 0.12);
+    --pf-hairline: rgba(255, 255, 255, 0.14);
+    --pf-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
+    --pf-btn-bg: #fafafa;
+    --pf-btn-fg: #18181b;
+    --pf-ring: rgba(250, 250, 250, 0.7);
+    color-scheme: dark;
+  }
+}
+
+/*
+ * Entrance animation for hero + blocks. Deliberately CSS rather than
+ * framer-motion: the public page is the shared hot path, so it stays a server
+ * component with zero animation JS. Stagger comes from an inline
+ * `animation-delay` on each item.
+ */
+@keyframes pf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * `backwards`, not `both`: a forwards fill would keep applying the final
+ * `transform` from the keyframe and silently outrank the hover lift on every
+ * block. Backwards still holds the element hidden through its stagger delay.
+ */
+.pf-reveal {
+  animation: pf-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/*
+ * Social pills tint to the platform's brand colour on hover. Each link inlines
+ * both variants (`--pf-brand-l` / `--pf-brand-d`) because a black mark like X
+ * or TikTok has to flip to white on a dark page — and with `.pf-theme-auto`
+ * that isn't known until the visitor's own preference applies.
+ */
+.pf-social {
+  --pf-brand: var(--pf-brand-l, var(--pf-text));
+  background-color: var(--pf-surface);
+  border-color: var(--pf-border);
+  color: var(--pf-text);
+  outline-color: var(--pf-ring);
+}
+
+.pf-theme-dark .pf-social {
+  --pf-brand: var(--pf-brand-d, var(--pf-text));
+}
+
+@media (prefers-color-scheme: dark) {
+  .pf-theme-auto .pf-social {
+    --pf-brand: var(--pf-brand-d, var(--pf-text));
+  }
+}
+
+.pf-social:hover,
+.pf-social:focus-visible {
+  background-color: var(--pf-surface-hover);
+  color: var(--pf-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-reveal {
+    animation: none;
+  }
+
+  /* Kills the drifting gradient blobs behind every page. */
+  .animate-float {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

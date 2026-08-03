@@ -1,15 +1,23 @@
 import Link from "next/link";
+import { GradientMesh } from "@/components/gradient-mesh";
+import { Card } from "@/components/ui";
+import { AuthCardMotion } from "@/components/auth/auth-card-motion";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-black">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <GradientMesh />
       <Link
         href="/"
-        className="mb-8 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50"
+        className="mb-8 bg-gradient-to-r from-brand-from via-brand-via to-brand-to bg-clip-text text-2xl font-bold tracking-tight text-transparent"
       >
         fracture
       </Link>
-      <div className="w-full max-w-sm">{children}</div>
+      <div className="w-full max-w-sm">
+        <AuthCardMotion>
+          <Card>{children}</Card>
+        </AuthCardMotion>
+      </div>
     </div>
   );
 }

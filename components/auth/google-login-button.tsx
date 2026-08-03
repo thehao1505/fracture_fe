@@ -70,7 +70,7 @@ export function GoogleLoginButton({ next }: { next?: string }) {
   return (
     <div className="flex flex-col gap-2">
       <Script
-        src="https://accounts.google.com/gsi/client"
+        src="https://accounts.google.com/gsi/client?hl=en"
         strategy="afterInteractive"
         onLoad={handleScriptLoad}
       />

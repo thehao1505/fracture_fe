@@ -1,4 +1,12 @@
+"use client";
+
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { motion } from "framer-motion";
+import { CircleAlert, CircleCheck, Inbox, Info, type LucideIcon } from "lucide-react";
+
+/** Shared glass-surface classes — light glass on light bg, subtle glass on dark bg. */
+const GLASS =
+  "border border-white/60 bg-white/60 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-900/50";
 
 export function Alert({
   tone,
@@ -9,15 +17,23 @@ export function Alert({
 }) {
   const styles = {
     error:
-      "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300",
+      "border-red-200/70 bg-red-50/80 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300",
     success:
-      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300",
-    info: "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300",
+      "border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300",
+    info: `${GLASS} text-zinc-700 dark:text-zinc-300`,
   }[tone];
+  const Icon = { error: CircleAlert, success: CircleCheck, info: Info }[tone];
+
   return (
-    <div className={`rounded-md border px-3 py-2 text-sm ${styles}`} role="alert">
-      {children}
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm backdrop-blur-xl ${styles}`}
+      role="alert"
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <span>{children}</span>
+    </motion.div>
   );
 }
 
@@ -51,11 +67,14 @@ export function Field({
   );
 }
 
+const FIELD_BASE =
+  "w-full min-w-0 rounded-xl border border-zinc-200/80 bg-white/70 px-3 text-sm text-zinc-900 outline-none backdrop-blur-sm transition placeholder:text-zinc-400 focus:border-transparent focus:bg-white focus:ring-2 focus:ring-brand-via/50 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-100 dark:focus:bg-zinc-900 dark:focus:ring-brand-via/40";
+
 export function Input(props: ComponentPropsWithoutRef<"input">) {
   return (
     <input
       {...props}
-      className={`h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800 ${props.className ?? ""}`}
+      className={`h-10 ${FIELD_BASE} ${props.className ?? ""}`}
     />
   );
 }
@@ -64,7 +83,7 @@ export function Textarea(props: ComponentPropsWithoutRef<"textarea">) {
   return (
     <textarea
       {...props}
-      className={`rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800 ${props.className ?? ""}`}
+      className={`py-2 ${FIELD_BASE} ${props.className ?? ""}`}
     />
   );
 }
@@ -73,39 +92,78 @@ export function Select(props: ComponentPropsWithoutRef<"select">) {
   return (
     <select
       {...props}
-      className={`h-10 rounded-md border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-800 ${props.className ?? ""}`}
+      className={`h-10 ${FIELD_BASE} ${props.className ?? ""}`}
     />
   );
 }
 
 const buttonVariants = {
   primary:
-    "bg-zinc-900 text-white hover:bg-zinc-700 disabled:bg-zinc-400 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 dark:disabled:bg-zinc-600",
-  secondary:
-    "border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900",
+    "bg-gradient-to-r from-brand-from via-brand-via to-brand-to text-white shadow-lg shadow-brand-via/25 hover:shadow-xl hover:shadow-brand-via/35 disabled:opacity-50 disabled:shadow-none",
+  secondary: `${GLASS} text-zinc-800 hover:bg-white/80 disabled:text-zinc-400 dark:text-zinc-200 dark:hover:bg-zinc-900/80`,
   danger:
-    "border border-red-200 bg-white text-red-600 hover:bg-red-50 disabled:text-red-300 dark:border-red-900 dark:bg-zinc-950 dark:text-red-400 dark:hover:bg-red-950",
+    "border border-red-200/70 bg-white/70 text-red-600 backdrop-blur-xl hover:bg-red-50/80 disabled:text-red-300 dark:border-red-900/50 dark:bg-zinc-900/50 dark:text-red-400 dark:hover:bg-red-950/40",
 } as const;
 
-export function Button({
-  variant = "primary",
-  ...props
-}: ComponentPropsWithoutRef<"button"> & {
+type ButtonProps = Omit<
+  ComponentPropsWithoutRef<"button">,
+  | "onDrag"
+  | "onDragStart"
+  | "onDragEnd"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration"
+> & {
   variant?: keyof typeof buttonVariants;
-}) {
+};
+
+export function Button({ variant = "primary", ...props }: ButtonProps) {
   return (
-    <button
+    <motion.button
+      whileHover={props.disabled ? undefined : { scale: 1.02 }}
+      whileTap={props.disabled ? undefined : { scale: 0.97 }}
+      transition={{ duration: 0.15 }}
       {...props}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed ${buttonVariants[variant]} ${props.className ?? ""}`}
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed ${buttonVariants[variant]} ${props.className ?? ""}`}
     />
   );
 }
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div
+      className={`rounded-2xl ${GLASS} p-6 shadow-xl shadow-brand-via/5 dark:shadow-none`}
+    >
       {children}
     </div>
+  );
+}
+
+export function Badge({
+  tone = "neutral",
+  icon: Icon,
+  children,
+}: {
+  tone?: "neutral" | "warning" | "brand";
+  icon?: LucideIcon;
+  children: ReactNode;
+}) {
+  const styles = {
+    neutral:
+      "bg-zinc-100/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300",
+    warning:
+      "bg-amber-100/80 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
+    brand:
+      "bg-gradient-to-r from-brand-from/15 to-brand-to/15 text-brand-via dark:text-fuchsia-300",
+  }[tone];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${styles}`}
+    >
+      {Icon && <Icon className="h-3 w-3" aria-hidden />}
+      {children}
+    </span>
   );
 }
 
@@ -117,7 +175,10 @@ export function EmptyState({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center dark:border-zinc-700">
+    <div
+      className={`flex flex-col items-center gap-2 rounded-2xl border border-dashed border-zinc-300/80 px-6 py-12 text-center dark:border-white/15`}
+    >
+      <Inbox className="h-6 w-6 text-zinc-400 dark:text-zinc-500" aria-hidden />
       <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{title}</p>
       {children && (
         <div className="text-sm text-zinc-500 dark:text-zinc-400">{children}</div>
