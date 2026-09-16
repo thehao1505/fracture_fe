@@ -1,11 +1,21 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { login, loginWithGoogle, register } from "@/lib/api/auth";
+import { login, loginWithGoogle, register, revokeSession } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
+import type { LoginResponse } from "@/lib/api/types";
 import type { FormState } from "@/lib/form-state";
-import { clearSessionToken, setSessionToken } from "@/lib/session";
+import { clearSession, getSessionTokens, setSession } from "@/lib/auth/session";
 import { validateEmail, validatePassword } from "@/lib/validation";
+
+/**
+ * Refresh guideline §3.1 — the access and refresh tokens are always written
+ * together, through the single writer. Writing one half is what makes the next
+ * refresh present a stale token and lose the whole session.
+ */
+async function storeSession(res: LoginResponse): Promise<void> {
+  await setSession({ access: res.access_token, refresh: res.refresh_token });
+}
 
 /** Only allow internal paths for the post-login redirect. */
 function safeNextPath(raw: FormDataEntryValue | null): string {
@@ -30,7 +40,7 @@ export async function loginAction(
 
   try {
     const res = await login({ email, password });
-    await setSessionToken(res.access_token);
+    await storeSession(res);
   } catch (err) {
     if (err instanceof ApiError) {
       // §6 — same message for unknown email and wrong password
@@ -67,7 +77,7 @@ export async function registerAction(
     await register({ email, password, name });
     // Register returns no token (§4) — log in with the same credentials.
     const res = await login({ email, password });
-    await setSessionToken(res.access_token);
+    await storeSession(res);
   } catch (err) {
     if (err instanceof ApiError) {
       // §6 mapping: 409 on register = email already in use
@@ -99,7 +109,7 @@ export async function loginWithGoogleAction(
 
   try {
     const res = await loginWithGoogle({ id_token: idToken });
-    await setSessionToken(res.access_token);
+    await storeSession(res);
   } catch (err) {
     if (err instanceof ApiError) {
       return { error: "Google sign-in failed. Please try again." };
@@ -110,8 +120,21 @@ export async function loginWithGoogleAction(
   redirect(safeNextPath(next ?? null));
 }
 
+/**
+ * Refresh guideline §3.4 — revoke the session on the backend, then drop the
+ * cookies no matter what happened. The `finally` is the point: a network error
+ * or 5xx must never leave a signed-in client behind (§2d, the API fails open
+ * when Redis is down).
+ */
 export async function logoutAction(): Promise<void> {
-  // §2 — no server-side logout/revocation; dropping the cookie is all there is.
-  await clearSessionToken();
+  try {
+    const { access } = await getSessionTokens();
+    if (access) await revokeSession(access);
+  } catch {
+    // Ignored on purpose — see above.
+  } finally {
+    await clearSession();
+  }
+
   redirect("/login");
 }

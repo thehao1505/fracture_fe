@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { fetchOgImage } from "@/lib/link-preview";
-import { getSessionToken } from "@/lib/session";
+import { getSessionTokens } from "@/lib/auth/session";
 
 /** Dashboard-only helper: fetch a URL's og:image to suggest as a link block's thumbnail. */
 export async function GET(request: Request) {
-  const token = await getSessionToken();
-  if (!token) {
+  // Presence check only: this handler calls no Fracture endpoint, so there is
+  // nothing to refresh — Proxy has already done it if it was needed.
+  const { access } = await getSessionTokens();
+  if (!access) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -147,6 +147,11 @@ export interface GoogleLoginRequest {
   id_token: string;
 }
 
+/** Refresh guideline §1.1 POST /auth/refresh — public, no Authorization header. */
+export interface RefreshRequest {
+  refresh_token: string;
+}
+
 export interface CreateUserRequest {
   email: string;
   name: string;
@@ -211,9 +216,16 @@ export interface MessageResponse {
   message: string;
 }
 
+/**
+ * Envelope of /auth/login, /auth/google and /auth/refresh — identical for all
+ * three (refresh guideline §1.1). `refresh_token` is a NEW value on every
+ * refresh and must overwrite the old one; `data` is the current user, so no
+ * follow-up profile call is needed after a refresh.
+ */
 export interface LoginResponse {
   data: User;
   access_token: string;
+  refresh_token: string;
   token_type: "Bearer";
 }
 

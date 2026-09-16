@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ApiError } from "@/lib/api/client";
 import { getMyProfile } from "@/lib/api/me";
 import type { Profile } from "@/lib/api/types";
 import { profileOrigin, ROOT_DOMAIN } from "@/lib/domain";
-import { requireSessionToken } from "@/lib/session";
+import { reauthenticate, requireAccessToken } from "@/lib/auth/session";
 import { Badge, Card } from "@/components/ui";
 import { CreateProfileForm } from "@/components/dashboard/create-profile-form";
 import { ProfileForm } from "@/components/dashboard/profile-form";
@@ -15,7 +14,7 @@ import { PublishToggle } from "@/components/dashboard/publish-toggle";
 export const metadata: Metadata = { title: "Dashboard — fracture" };
 
 export default async function DashboardPage() {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
 
   let profile: Profile | null = null;
   try {
@@ -24,7 +23,9 @@ export default async function DashboardPage() {
     if (err instanceof ApiError) {
       // §7.1 — 404 means the user has no profile yet: show onboarding.
       if (err.isNotFound) profile = null;
-      else if (err.isUnauthorized) redirect("/logout");
+      // Proxy already refreshed if it could, so try the forced path once
+      // before giving up on the session (refresh guideline §4).
+      else if (err.isUnauthorized) await reauthenticate();
       else throw err;
     } else {
       throw err;

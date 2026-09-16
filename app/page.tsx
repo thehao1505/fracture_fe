@@ -1,9 +1,9 @@
-import { getSessionToken } from "@/lib/session";
+import { hasSession } from "@/lib/auth/session";
 import { GradientMesh } from "@/components/gradient-mesh";
 import { HomeHero } from "@/components/home-hero";
 
 export default async function Home() {
-  const isSignedIn = Boolean(await getSessionToken());
+  const isSignedIn = await hasSession();
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-4">

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import {
   createBlock,
@@ -23,7 +22,7 @@ import type {
 } from "@/lib/api/types";
 import { BLOCK_TYPES } from "@/lib/api/types";
 import type { FormState } from "@/lib/form-state";
-import { clearSessionToken, requireSessionToken } from "@/lib/session";
+import { reauthenticate, requireAccessToken } from "@/lib/auth/session";
 import {
   normalizeUsername,
   validateAppearance,
@@ -33,12 +32,15 @@ import {
   validateUsername,
 } from "@/lib/validation";
 
-/** §6 — 401 means the 24h token expired (no refresh flow): back to login. */
+/**
+ * Proxy refreshes the access token before this action even runs (proxy.ts), so a
+ * 401 here means the session itself is gone — revoked elsewhere, past the 90-day
+ * cap, or Proxy's refresh failed on the network. `reauthenticate()` hands it to
+ * Proxy's forced-refresh path, which retries exactly once and otherwise hard
+ * logs out (refresh guideline §3.3, §4).
+ */
 async function handleAuthExpiry(err: unknown): Promise<void> {
-  if (err instanceof ApiError && err.isUnauthorized) {
-    await clearSessionToken();
-    redirect("/login");
-  }
+  if (err instanceof ApiError && err.isUnauthorized) await reauthenticate();
 }
 
 function genericError(err: unknown): FormState {
@@ -91,7 +93,7 @@ export async function createProfileAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   const username = normalizeUsername(String(formData.get("username") ?? ""));
   const displayName = String(formData.get("display_name") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
@@ -123,7 +125,7 @@ export async function updateProfileAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   const username = normalizeUsername(String(formData.get("username") ?? ""));
 
   const usernameError = validateUsername(username);
@@ -155,7 +157,7 @@ export async function updateProfileAction(
 }
 
 export async function togglePublishAction(): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   try {
     // §7.9 — PUT is full-replace, so read current values before flipping.
     const { data: profile } = await getMyProfile(token);
@@ -220,7 +222,7 @@ export async function addBlockAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   const type = String(formData.get("type") ?? "") as BlockType;
   if (!BLOCK_TYPES.includes(type)) return { error: "Unknown block type." };
 
@@ -249,7 +251,7 @@ export async function updateBlockAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   const id = String(formData.get("id") ?? "");
   const type = String(formData.get("type") ?? "") as BlockType;
   if (!id) return { error: "Missing block id." };
@@ -271,7 +273,7 @@ export async function updateBlockAction(
 }
 
 export async function toggleBlockVisibilityAction(id: string): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   try {
     // PUT requires type + content (§4), so re-read the block first.
     const { data: profile } = await getMyProfile(token);
@@ -291,7 +293,7 @@ export async function toggleBlockVisibilityAction(id: string): Promise<FormState
 }
 
 export async function deleteBlockAction(id: string): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   try {
     await deleteBlock(token, id);
   } catch (err) {
@@ -304,7 +306,7 @@ export async function deleteBlockAction(id: string): Promise<FormState> {
 
 /** §7.7 — the order array must contain every current block id exactly once. */
 export async function reorderBlocksAction(order: string[]): Promise<FormState> {
-  const token = await requireSessionToken();
+  const token = await requireAccessToken();
   try {
     await reorderBlocks(token, { order });
   } catch (err) {
